@@ -10,12 +10,16 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.jlibrosa.audio.JLibrosa;
 
 import org.tensorflow.lite.Interpreter;
@@ -47,7 +51,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private TextView numberofwords;
     private TextView inferencetimepercharacter;
     protected ListView deviceView;
+    protected int defaultDeviceIndex = 0;
     String[] ACC_List;
+
+    /** Current indices of device and model. */
+    int currentDevice = -1;
+    int currentModel = -1;
+    int currentNumThreads = -1;
 
     private String wavFilename;
     private MediaPlayer mediaPlayer = new MediaPlayer();
@@ -59,6 +69,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private final static String[] WAV_FILENAMES = {"audio_clip_1.wav", "audio_clip_2.wav", "audio_clip_3.wav"};
     private final static String TFLITE_FILE = "CONFORMER.tflite";
     ArrayList<String> deviceStrings = new ArrayList<String>();
+    protected ArrayList<String> modelStrings = new ArrayList<String>();
+
+    private LinearLayout bottomSheetLayout;
+    protected ImageView bottomSheetArrowImageView;
+    private LinearLayout gestureLayout;
+    private BottomSheetBehavior<LinearLayout> sheetBehavior;
+
+    protected int defaultModelIndex = 0;
+
+    protected ListView modelView;
+    private static final String ASSET_PATH = "";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +115,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         numberofwords = findViewById(R.id.number_word_info);
         inferencetimepercharacter = findViewById(R.id.number_char_info);
 
-        // SET ACC LIST
+        // SET ACC (Device) LIST
         deviceView = findViewById(R.id.device_list);
         deviceStrings.add("CPU");
         deviceStrings.add("GPU");
@@ -103,9 +125,41 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 new ArrayAdapter<>(
                         this , R.layout.deviceview_row, R.id.deviceview_row_text, deviceStrings);
         deviceView.setAdapter(deviceAdapter);
+        deviceView.setItemChecked(defaultDeviceIndex, true);
+        currentDevice = defaultDeviceIndex;
+        deviceView.setOnItemClickListener(
+                new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                       // updateActiveModel();
+                    }
+                });
+
+        //List of Models[conformer, tranducer, contextnet]
+        bottomSheetLayout = findViewById(R.id.bottom_sheet_layout);
+        gestureLayout = findViewById(R.id.gesture_layout);
+        sheetBehavior = BottomSheetBehavior.from(bottomSheetLayout);
+        // bottomSheetArrowImageView = findViewById(R.id.bottom_sheet_arrow);
+        modelView = findViewById((R.id.model_list));
+
+        modelStrings = getModelStrings(getAssets(), ASSET_PATH);
+        modelView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        ArrayAdapter<String> modelAdapter =
+                new ArrayAdapter<>(
+                        this , R.layout.listview_row, R.id.listview_row_text, modelStrings);
+        modelView.setAdapter(modelAdapter);
+        modelView.setItemChecked(defaultModelIndex, true);
+        currentModel = defaultModelIndex;
+        modelView.setOnItemClickListener(
+                new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        // updateActiveModel();
+                    }
+                });
 
 
-
+        // TRANSCRIBTION
         transcribeButton.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
@@ -160,6 +214,25 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
             }
         });
+    }
+
+    // List of models
+    protected ArrayList<String> getModelStrings(AssetManager mgr, String path){
+        ArrayList<String> res = new ArrayList<String>();
+        try {
+            String[] files = mgr.list(path);
+            for (String file : files) {
+                String[] splits = file.split("\\.");
+                if (splits[splits.length - 1].equals("tflite")) {
+                    res.add(file);
+                }
+            }
+
+        }
+        catch (IOException e){
+            System.err.println("getModelStrings: " + e.getMessage());
+        }
+        return res;
     }
 
     @Override
