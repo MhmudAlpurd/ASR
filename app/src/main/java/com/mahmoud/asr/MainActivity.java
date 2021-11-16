@@ -27,6 +27,8 @@ import java.io.InputStream;
 import java.nio.IntBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,6 +39,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private Button transcribeButton;
     private Button playAudioButton;
     private TextView resultTextview;
+    private long lastProcessingTimeMs;
+    private TextView inferencetimeinfo;
+    private TextView inferencetimeperword;
+    private TextView numberofwords;
+    private TextView inferencetimepercharacter;
 
     private String wavFilename;
     private MediaPlayer mediaPlayer = new MediaPlayer();
@@ -76,6 +83,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         });
         transcribeButton = findViewById(R.id.recognize);
         resultTextview = findViewById(R.id.result);
+        inferencetimeinfo = findViewById(R.id.inference_time_info);
+        inferencetimeperword = findViewById(R.id.inf_per_word_info);
+        numberofwords = findViewById(R.id.number_word_info);
+        inferencetimepercharacter = findViewById(R.id.number_char_info);
         transcribeButton.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
@@ -89,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     outputMap.put(0, outputBuffer);
 
                     tfLiteModel = loadModelFile(getAssets(), TFLITE_FILE);
+                    long startTime = new Date().getTime();
                     Interpreter.Options tfLiteOptions = new Interpreter.Options();
                     tfLite = new Interpreter(tfLiteModel, tfLiteOptions);
                     tfLite.resizeInput(0, new int[] {audioFeatureValues.length});
@@ -106,7 +118,31 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             finalResult.append((char) outputArray[i]);
                         }
                     }
+                    lastProcessingTimeMs = new Date().getTime() - startTime;
+                    String finalResult_str = finalResult.toString();
+                    Log.v("output", "result"+ finalResult_str);
+                    String[] splited = finalResult_str.split("\\s+");
+                    // long totalCharacters = finalResult_str.chars().filter(ch -> ch != ' ').count();
+                    long totalCharacters = finalResult_str.chars().count();
+                    int num_of_words = splited.length;
+                    Log.v("output", "now"+ num_of_words);
+                    int inf_per_word = (int) (lastProcessingTimeMs / num_of_words);
+                    int inf_per_char = (int) (lastProcessingTimeMs / totalCharacters);
+                    Log.v("output", "infperchar"+ inf_per_char);
+
                     resultTextview.setText(finalResult.toString());
+                    numberofwords.setText(num_of_words + "  ");
+                    inferencetimeinfo.setText(lastProcessingTimeMs + "ms");
+                    inferencetimeperword.setText(inf_per_word + "ms");
+                    inferencetimepercharacter.setText(inf_per_char + "ms");
+
+
+
+
+
+
+
+
 
                 } catch (Exception e){
                     Log.e(TAG, e.getMessage());
