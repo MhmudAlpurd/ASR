@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -27,6 +28,7 @@ import java.io.InputStream;
 import java.nio.IntBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -44,6 +46,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private TextView inferencetimeperword;
     private TextView numberofwords;
     private TextView inferencetimepercharacter;
+    protected ListView deviceView;
+    String[] ACC_List;
 
     private String wavFilename;
     private MediaPlayer mediaPlayer = new MediaPlayer();
@@ -54,6 +58,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private final static String[] WAV_FILENAMES = {"audio_clip_1.wav", "audio_clip_2.wav", "audio_clip_3.wav"};
     private final static String TFLITE_FILE = "CONFORMER.tflite";
+    ArrayList<String> deviceStrings = new ArrayList<String>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +92,20 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         inferencetimeperword = findViewById(R.id.inf_per_word_info);
         numberofwords = findViewById(R.id.number_word_info);
         inferencetimepercharacter = findViewById(R.id.number_char_info);
+
+        // SET ACC LIST
+        deviceView = findViewById(R.id.device_list);
+        deviceStrings.add("CPU");
+        deviceStrings.add("GPU");
+        deviceStrings.add("NNAPI");
+        deviceView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        ArrayAdapter<String> deviceAdapter =
+                new ArrayAdapter<>(
+                        this , R.layout.deviceview_row, R.id.deviceview_row_text, deviceStrings);
+        deviceView.setAdapter(deviceAdapter);
+
+
+
         transcribeButton.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
@@ -135,15 +154,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     inferencetimeinfo.setText(lastProcessingTimeMs + "ms");
                     inferencetimeperword.setText(inf_per_word + "ms");
                     inferencetimepercharacter.setText(inf_per_char + "ms");
-
-
-
-
-
-
-
-
-
                 } catch (Exception e){
                     Log.e(TAG, e.getMessage());
                 }

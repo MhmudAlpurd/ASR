@@ -122,7 +122,7 @@
     </LinearLayout>
 
 
-    <!-- <View
+    <View
          android:layout_width="match_parent"
          android:layout_height="1px"
          android:layout_marginTop="10dp"
@@ -179,7 +179,7 @@
         android:layout_width="match_parent"
         android:layout_height="1px"
         android:layout_marginTop="10dp"
-        android:background="@android:color/darker_gray" /> -->
+        android:background="@android:color/darker_gray" />
 
     <!-- TODO(b/112541284): Unhide when new NNAPI delegate is used. -->
 

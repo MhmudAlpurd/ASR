@@ -49,5 +49,6 @@ dependencies {
     implementation 'org.tensorflow:tensorflow-lite:2.4.0'
     implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:2.4.0'
     implementation 'com.google.guava:guava:28.2-android'
-
+    implementation 'org.tensorflow:tensorflow-lite-gpu:2.4.0'
+    implementation 'com.google.code.gson:gson:2.8.6'
 }
